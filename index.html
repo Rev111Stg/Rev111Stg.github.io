@@ -4,152 +4,43 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Daily Meal Fund</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background-color: #f7f7f7;
-    }
-
-    h1 {
-      text-align: center;
-      color: #333;
-    }
-
-    .container {
-      max-width: 500px;
-      margin: 0 auto;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      padding: 20px;
-    }
-
-    select {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-      margin-bottom: 20px;
-    }
-
-    .days-container {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .day-box {
-      flex: 1;
-      margin: 0 10px;
-      background: #e3f2fd;
-      border-radius: 10px;
-      text-align: center;
-      padding: 15px;
-      font-size: 18px;
-      font-weight: bold;
-      color: #1565c0;
-    }
-
-    .buttons {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 15px;
-    }
-
-    button {
-      background-color: #1976d2;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-
-    button:disabled {
-      background-color: #90caf9;
-      cursor: not-allowed;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <h1>Daily Meal Fund</h1>
   <div class="container">
-    <label for="monthSelect"><b>Chọn tháng:</b></label>
-    <select id="monthSelect">
-      <option value="">-- Chọn tháng --</option>
-    </select>
+    <header>
+      <button id="prevDay">◀</button>
+      <h1 id="dateDisplay">02/11/2025</h1>
+      <button id="nextDay">▶</button>
+    </header>
 
-    <div id="daySlider" style="display:none;">
-      <div class="days-container">
-        <div class="day-box" id="day1"></div>
-        <div class="day-box" id="day2"></div>
-      </div>
+    <table id="fundTable">
+      <tr><td>Date</td><td id="dateCell"></td></tr>
+      <tr><td>Available Meal Fund</td><td id="availableFund"></td></tr>
+      <tr><td>Movements</td><td><input type="number" id="movements" /></td></tr>
+      <tr><td>Updated Meal Balance</td><td id="updatedBalance"></td></tr>
+      <tr><td>End Date (ED)</td><td id="endDate"></td></tr>
+      <tr><td>Remaining Time Days to ED</td><td id="remainingDays"></td></tr>
+      <tr><td>Daily Meal Budget</td><td id="dailyBudget"></td></tr>
+      <tr><td>Actual Spending</td><td><input type="number" id="actualSpending" /></td></tr>
+      <tr><td>Remaining Balance</td><td id="remainingBalance"></td></tr>
+    </table>
 
-      <div class="buttons">
-        <button id="prevBtn">⬅ Trước</button>
-        <button id="nextBtn">Tiếp ➡</button>
-      </div>
-    </div>
+    <button id="saveBtn">💾 Lưu</button>
   </div>
 
-  <script>
-    const monthSelect = document.getElementById('monthSelect');
-    const daySlider = document.getElementById('daySlider');
-    const day1Box = document.getElementById('day1');
-    const day2Box = document.getElementById('day2');
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
+  <div id="toast">Đã lưu thành công!</div>
 
-    // Thêm danh sách tháng (1–12)
-    for (let i = 1; i <= 12; i++) {
-      const option = document.createElement('option');
-      option.value = i;
-      option.textContent = `Tháng ${i}`;
-      monthSelect.appendChild(option);
-    }
+  <button id="settingsBtn">⚙️</button>
+  <div id="settingsPanel">
+    <h2>Cài đặt</h2>
+    <label>Chọn tháng: <input type="month" id="monthSelect"></label>
+    <label>Available Meal Fund: <input type="number" id="fundInput"></label>
+    <label>End Date (ED): <input type="date" id="edInput"></label>
+    <button id="saveSettings">Lưu cài đặt</button>
+  </div>
 
-    let currentDayIndex = 0;
-    let days = [];
-
-    monthSelect.addEventListener('change', () => {
-      const month = monthSelect.value;
-      if (!month) {
-        daySlider.style.display = 'none';
-        return;
-      }
-
-      const year = new Date().getFullYear();
-      const daysInMonth = new Date(year, month, 0).getDate();
-      days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-
-      currentDayIndex = 0;
-      updateDays();
-      daySlider.style.display = 'block';
-    });
-
-    function updateDays() {
-      day1Box.textContent = `Ngày ${days[currentDayIndex]}`;
-      day2Box.textContent = days[currentDayIndex + 1] ? `Ngày ${days[currentDayIndex + 1]}` : '-';
-
-      prevBtn.disabled = currentDayIndex === 0;
-      nextBtn.disabled = currentDayIndex + 2 >= days.length;
-    }
-
-    nextBtn.addEventListener('click', () => {
-      if (currentDayIndex + 2 < days.length) {
-        currentDayIndex++;
-        updateDays();
-      }
-    });
-
-    prevBtn.addEventListener('click', () => {
-      if (currentDayIndex > 0) {
-        currentDayIndex--;
-        updateDays();
-      }
-    });
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
