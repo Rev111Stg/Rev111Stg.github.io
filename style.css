@@ -1,31 +1,137 @@
-body {
-  font-family: Arial, sans-serif;
-  background-color: #f3f3f3;
-  color: #333;
-  text-align: center;
-  margin: 0;
-  padding: 0;
+const dateDisplay = document.getElementById("dateDisplay");
+const dateCell = document.getElementById("dateCell");
+const availableFund = document.getElementById("availableFund");
+const movements = document.getElementById("movements");
+const updatedBalance = document.getElementById("updatedBalance");
+const endDate = document.getElementById("endDate");
+const remainingDays = document.getElementById("remainingDays");
+const dailyBudget = document.getElementById("dailyBudget");
+const actualSpending = document.getElementById("actualSpending");
+const remainingBalance = document.getElementById("remainingBalance");
+const saveBtn = document.getElementById("saveBtn");
+const prevDay = document.getElementById("prevDay");
+const nextDay = document.getElementById("nextDay");
+const toast = document.getElementById("toast");
+
+const settingsBtn = document.getElementById("settingsBtn");
+const settingsPanel = document.getElementById("settingsPanel");
+const monthSelect = document.getElementById("monthSelect");
+const fundInput = document.getElementById("fundInput");
+const edInput = document.getElementById("edInput");
+const saveSettings = document.getElementById("saveSettings");
+
+let settings = JSON.parse(localStorage.getItem("settings")) || {
+  month: "",
+  fund: 0,
+  endDate: "",
+};
+let data = JSON.parse(localStorage.getItem("data")) || {};
+let currentDate = new Date();
+
+function formatDate(d) {
+  return d.toLocaleDateString("vi-VN");
+}
+function formatNumber(num) {
+  return num.toLocaleString("vi-VN");
+}
+function daysBetween(d1, d2) {
+  return Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
 }
 
-header {
-  background-color: #007bff;
-  color: white;
-  padding: 20px 0;
+function render() {
+  const monthKey = settings.month;
+  const dateKey = formatDate(currentDate);
+  dateDisplay.textContent = dateKey;
+  dateCell.textContent = dateKey;
+
+  const today = new Date();
+  nextDay.disabled = currentDate >= today;
+
+  const d = data[monthKey]?.[dateKey] || {
+    movements: 0,
+    actualSpending: 0,
+  };
+  movements.value = d.movements;
+  actualSpending.value = d.actualSpending;
+
+  const ed = new Date(settings.endDate);
+  const remainDays = daysBetween(currentDate, ed) + 1;
+  remainingDays.textContent = remainDays > 0 ? remainDays : 0;
+  endDate.textContent = settings.endDate;
+
+  const prev = new Date(currentDate);
+  prev.setDate(prev.getDate() - 1);
+  const prevKey = formatDate(prev);
+  let avail = settings.fund;
+
+  if (data[monthKey]) {
+    const allDates = Object.keys(data[monthKey]);
+    allDates.sort((a, b) => new Date(a) - new Date(b));
+    let prevFund = settings.fund;
+    for (let key of allDates) {
+      if (new Date(key) < currentDate) {
+        const dd = data[monthKey][key];
+        const rb = dd.remainingBalance || 0;
+        const db = dd.dailyBudget || 0;
+        prevFund -= db;
+        if (key === prevKey) avail = prevFund;
+      }
+    }
+  }
+
+  availableFund.textContent = formatNumber(avail);
+  const upBal = avail + Number(d.movements || 0);
+  updatedBalance.textContent = formatNumber(upBal);
+
+  let db;
+  if (data[monthKey]?.[prevKey]?.remainingBalance >= 0) {
+    db = upBal / remainDays;
+  } else {
+    db = upBal / remainDays + (data[monthKey]?.[prevKey]?.remainingBalance || 0);
+  }
+  dailyBudget.textContent = formatNumber(db);
+
+  const rb = db - Number(d.actualSpending || 0);
+  remainingBalance.textContent = formatNumber(rb);
 }
 
-main {
-  margin: 20px;
-}
+saveBtn.onclick = () => {
+  const monthKey = settings.month;
+  const dateKey = formatDate(currentDate);
+  if (!data[monthKey]) data[monthKey] = {};
+  data[monthKey][dateKey] = {
+    movements: Number(movements.value),
+    actualSpending: Number(actualSpending.value),
+    dailyBudget: parseFloat(dailyBudget.textContent.replace(/\./g, "")) || 0,
+    remainingBalance: parseFloat(remainingBalance.textContent.replace(/\./g, "")) || 0,
+  };
+  localStorage.setItem("data", JSON.stringify(data));
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 2000);
+};
 
-button {
-  background-color: #28a745;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 6px;
-  cursor: pointer;
-}
+prevDay.onclick = () => {
+  currentDate.setDate(currentDate.getDate() - 1);
+  render();
+};
+nextDay.onclick = () => {
+  const today = new Date();
+  if (currentDate < today) {
+    currentDate.setDate(currentDate.getDate() + 1);
+    render();
+  }
+};
 
-button:hover {
-  background-color: #218838;
-}
+settingsBtn.onclick = () => settingsPanel.classList.toggle("show");
+saveSettings.onclick = () => {
+  settings = {
+    month: monthSelect.value,
+    fund: Number(fundInput.value),
+    endDate: edInput.value,
+  };
+  localStorage.setItem("settings", JSON.stringify(settings));
+  settingsPanel.classList.remove("show");
+  render();
+};
+
+render();
